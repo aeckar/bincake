@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "bincake"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "bincake-core",
  "bincake-derive",
@@ -12,7 +12,7 @@ dependencies = [
 
 [[package]]
 name = "bincake-core"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "pastey",
  "taped",
