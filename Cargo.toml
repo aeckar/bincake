@@ -6,3 +6,6 @@ resolver = "2"
 bincake = { path = "crates/bincake", version = "1.0.1" }
 bincake-core = { path = "crates/bincake-core", version = "1.0.1" }
 bincake-derive = { path = "crates/bincake-derive", version = "1.0.1" }
+
+[patch.crates-io]
+bincake = { path = "crates/bincake" }
