@@ -2,6 +2,12 @@
 name = "bincake"
 version = "0.1.0"
 edition = "2024"
+description = "um"
+license = "MIT"
+repository = "https://github.com/aeckar/bincake"
+readme = "../../README.md"
+keywords = []
+categories = []
 
 [dependencies]
 bincake-core = { path = "../bincake-core" }

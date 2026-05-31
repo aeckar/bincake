@@ -6,12 +6,14 @@ mod tuple_n;
 mod vec_n;
 
 /// The type used to represent the length of a string when serialized.
-pub type StrLen = u32;
+pub type StringLen = u32;
 
 /// The size of the type used to represent the length of a string when serialized.
-pub const STR_LEN_SIZE: usize = std::mem::size_of::<StrLen>();
+pub const STRING_LEN_SIZE: usize = std::mem::size_of::<StringLen>();
 
 pub use self::{error::*, serializable::*, traits::*, vec_n::*};
+
+pub use taped::Tape;    // re-export dependency as used in public API
 
 #[cfg(test)]
 mod tests {
