@@ -8,14 +8,15 @@ mod sized_vec;
 /// The type used to represent the length of a string when serialized.
 pub type StringSize = u32;
 
-pub use taped::Tape;
-
 // re-export dependency as used in public API
+pub use taped::*;
+
+// flatten modules
 pub use self::{error::*, read_write::*, serialize::*, sized_vec::*};
 
 #[cfg(test)]
 mod tests {
-    use taped::Tape;
+    use taped::ToTape;
 
     use crate::{
         error::{DecodeError, EncodeError},
@@ -30,7 +31,7 @@ mod tests {
         let mut buffer = vec![];
         buffer.write(&value).expect("Failed to write");
 
-        let mut src = Tape::new(&buffer);
+        let mut src = buffer.to_tape();
         let decoded = src.read::<T>().expect("Failed to read");
 
         dbg!(&src);
@@ -98,7 +99,7 @@ mod tests {
         let mut buffer = vec![];
         buffer.write(&f32::NAN).unwrap();
 
-        let mut src = Tape::new(&buffer);
+        let mut src = buffer.to_tape();
         let decoded = src.read::<f32>().unwrap();
 
         assert!(decoded.is_nan(), "NaN not preserved");
@@ -212,8 +213,8 @@ mod tests {
 
     #[test]
     fn test_empty_buffer_error() {
-        let buffer = vec![];
-        let mut src = Tape::new(&buffer);
+        let buffer = [];
+        let mut src = buffer.to_tape();
 
         let result = src.read::<u32>();
         assert!(matches!(result, Err(DecodeError::Exhausted { .. })));
@@ -226,7 +227,7 @@ mod tests {
 
         // Only provide 2 bytes instead of 4
         let truncated = &buffer[0..2];
-        let mut src = Tape::new(truncated);
+        let mut src = truncated.to_tape();
 
         let result = src.read::<u32>();
         assert!(matches!(result, Err(DecodeError::Exhausted { .. })));
@@ -239,7 +240,7 @@ mod tests {
 
         // Truncate the buffer
         let truncated = &buffer[0..6]; // Length prefix + only 2 chars
-        let mut src = Tape::new(truncated);
+        let mut src = truncated.to_tape();
 
         let result = src.read::<String>();
         assert!(matches!(result, Err(DecodeError::Exhausted { .. })));
@@ -254,7 +255,7 @@ mod tests {
         // Invalid UTF-8 sequence
         buffer.extend_from_slice(&[0xFF, 0xFE]);
 
-        let mut src = Tape::new(&buffer);
+        let mut src = buffer.to_tape();
         let result = src.read::<String>();
 
         assert!(matches!(result, Err(DecodeError::Other { .. })));
@@ -267,7 +268,7 @@ mod tests {
 
         // Truncate so there's not enough data for all elements
         let truncated = &buffer[0..8]; // Length prefix + only 1 element
-        let mut src = Tape::new(truncated);
+        let mut src = truncated.to_tape();
 
         let result = src.read::<Vec32<u32>>();
         assert!(matches!(result, Err(DecodeError::Exhausted { .. })));
@@ -289,8 +290,8 @@ mod tests {
 
     #[test]
     fn test_byte_stream_operations() {
-        let data = vec![1, 2, 3, 4, 5];
-        let mut src = Tape::new(&data);
+        let data = [1, 2, 3, 4, 5];
+        let mut src = data.to_tape();
 
         assert_eq!(src.pos, 0);
         assert_eq!(src.rest().len(), 5);
@@ -323,7 +324,7 @@ mod tests {
         .unwrap();
 
         // Read them back
-        let mut src = Tape::new(&buffer);
+        let mut src = buffer.to_tape();
 
         let num = src.read::<u32>().unwrap();
         assert_eq!(num, 42);
@@ -360,7 +361,7 @@ mod tests {
         buffer.write(&constants).unwrap();
 
         // Read it all back
-        let mut src = Tape::new(&buffer);
+        let mut src = buffer.to_tape();
 
         let magic = src.read::<u32>().unwrap();
         assert_eq!(magic, 0xCAFEBABE);
