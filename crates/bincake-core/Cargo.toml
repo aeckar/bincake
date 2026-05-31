@@ -1,13 +1,13 @@
 [package]
 name = "bincake-core"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
-description = "um"
+description = "Core library for bincake serialization."
 license = "MIT"
 repository = "https://github.com/aeckar/bincake"
 readme = "README.md"
-keywords = []
-categories = []
+keywords = ["binary", "decode", "deserialize", "encode", "serialize"]
+categories = ["encoding"]
 
 [dependencies]
 thiserror = "2"

@@ -1,17 +1,17 @@
 [package]
 name = "bincake"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
-description = "um"
+description = "Serde-free deterministic binary serialization."
 license = "MIT"
 repository = "https://github.com/aeckar/bincake"
 readme = "../../README.md"
-keywords = []
-categories = []
+keywords = ["binary", "decode", "deserialize", "encode", "serialize"]
+categories = ["encoding"]
 
 [dependencies]
-bincake-core = { version = "0.1.0", path = "../bincake-core" }
-bincake-derive = { version = "0.1.0", path = "../bincake-derive", optional = true }
+bincake-core = { version = "1.0.0", path = "../bincake-core" }
+bincake-derive = { version = "1.0.0", path = "../bincake-derive", optional = true }
 
 [features]
 default = ["derive"]
