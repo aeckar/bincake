@@ -23,7 +23,7 @@ dependencies = [
 name = "bincake-derive"
 version = "1.0.1"
 dependencies = [
- "bincake-core",
+ "bincake",
  "proc-macro2",
  "quote",
  "syn",

@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use bincake_core::*;
-    use bincake_derive::Serialize;
-use taped::Tape;
+    use bincake::*;
+    use taped::Tape;
 
     #[derive(Serialize, Debug, PartialEq, Eq)]
     struct Point {
@@ -30,14 +29,18 @@ use taped::Tape;
 
     #[test]
     fn test_struct_serialization() {
-        let point = Point { x: 10, y: -20, z: 30 };
+        let point = Point {
+            x: 10,
+            y: -20,
+            z: 30,
+        };
         let mut buffer = Vec::new();
-        
+
         buffer.write(&point).expect("Failed to write Point");
-        
+
         let mut stream = Tape::new(&buffer);
         let decoded = stream.read::<Point>().expect("Failed to read Point");
-        
+
         assert_eq!(point, decoded);
     }
 
@@ -50,12 +53,12 @@ use taped::Tape;
             active: true,
         };
         let mut buffer = Vec::new();
-        
+
         buffer.write(&player).expect("Failed to write Player");
-        
+
         let mut stream = Tape::new(&buffer);
         let decoded = stream.read::<Player>().expect("Failed to read Player");
-        
+
         assert_eq!(player, decoded);
     }
 
@@ -64,17 +67,22 @@ use taped::Tape;
         let instructions = vec![
             Instruction::Nop,
             Instruction::Push(42),
-            Instruction::Load { addr: 0xFF, size: 4 },
+            Instruction::Load {
+                addr: 0xFF,
+                size: 4,
+            },
             Instruction::Pop,
         ];
 
         for instr in instructions {
             let mut buffer = Vec::new();
             buffer.write(&instr).expect("Failed to write Instruction");
-            
+
             let mut stream = Tape::new(&buffer);
-            let decoded = stream.read::<Instruction>().expect("Failed to read Instruction");
-            
+            let decoded = stream
+                .read::<Instruction>()
+                .expect("Failed to read Instruction");
+
             assert_eq!(instr, decoded);
         }
     }
