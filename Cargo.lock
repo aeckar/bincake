@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "bincake"
-version = "1.2.0"
+version = "1.2.1"
 dependencies = [
  "bincake-core",
  "bincake-derive",
@@ -12,7 +12,7 @@ dependencies = [
 
 [[package]]
 name = "bincake-core"
-version = "1.2.0"
+version = "1.2.1"
 dependencies = [
  "pastey",
  "taped",
@@ -21,7 +21,7 @@ dependencies = [
 
 [[package]]
 name = "bincake-derive"
-version = "1.2.0"
+version = "1.2.1"
 dependencies = [
  "bincake-core",
  "proc-macro2",
@@ -73,9 +73,9 @@ dependencies = [
 
 [[package]]
 name = "taped"
-version = "1.5.1"
+version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc97db5f32741fb733b1813c97f0ebd25addd52be703f08b0dd147cbe5cbcd58"
+checksum = "cca49a43f09694c4420d44f5c4149b62efe740c5ed51648e8a709ce514bd4fd6"
 dependencies = [
  "memchr",
 ]

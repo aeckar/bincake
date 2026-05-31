@@ -5,10 +5,12 @@ use taped::Tape;
 
 use crate::{DecodeError, EncodeError, Serialize};
 
+/// Canonical API for decoding data from a byte buffer.
 pub trait Read {
     fn read<T: Serialize>(&mut self) -> Result<T, DecodeError>;
 }
 
+/// Canonical API for encoding data to a byte buffer.
 pub trait Write {
     fn write<T: Serialize>(&mut self, value: &T) -> Result<(), EncodeError>;
 }

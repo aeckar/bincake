@@ -3,6 +3,6 @@ members = ["crates/bincake", "crates/bincake-core", "crates/bincake-derive"]
 resolver = "2"
 
 [workspace.dependencies]
-bincake = { path = "crates/bincake", version = "1.2.0" }
-bincake-core = { path = "crates/bincake-core", version = "1.2.0" }
-bincake-derive = { path = "crates/bincake-derive", version = "1.2.0" }
+bincake = { path = "crates/bincake", version = "1.2.1" }
+bincake-core = { path = "crates/bincake-core", version = "1.2.1" }
+bincake-derive = { path = "crates/bincake-derive", version = "1.2.1" }

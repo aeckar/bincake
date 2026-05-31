@@ -1,6 +1,6 @@
 [package]
 name = "bincake-core"
-version = "1.2.0"
+version = "1.2.1"
 edition = "2024"
 description = "Core library for bincake serialization."
 license = "MIT"
@@ -12,4 +12,4 @@ categories = ["encoding"]
 [dependencies]
 thiserror = "2"
 pastey = "0.2.1"
-taped = "1.5.1"
+taped = "1.5.2"

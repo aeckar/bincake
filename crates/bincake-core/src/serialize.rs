@@ -14,9 +14,7 @@ use taped::Tape;
 
 use crate::{DecodeError, EncodeError, Read, Vec32, Write};
 
-/// Writes all provided data to the destination, taking each argument as a reference.
-///
-/// This macro is useful for streaming known sequences of values to a destination.
+/// Writes all arguments to a byte buffer, taking each as a reference.
 #[macro_export]
 macro_rules! stream {
     ($($data:expr),* $(,)? => $dest:expr) => {
