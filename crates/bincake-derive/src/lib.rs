@@ -1,6 +1,8 @@
-mod serialize_derive;
+mod derive_serialize;
 
 use proc_macro::TokenStream;
+
+use crate::derive_serialize::derive_serialize;
 
 /// Derive macro for automatically implementing the `Serializable` trait.
 ///
@@ -9,6 +11,8 @@ use proc_macro::TokenStream;
 /// # Example
 ///
 /// ```rust
+/// use bincake::Serialize;
+/// 
 /// #[derive(Serialize)]
 /// struct MyStruct {
 ///     name: String,
@@ -24,6 +28,6 @@ use proc_macro::TokenStream;
 /// }
 /// ```
 #[proc_macro_derive(Serialize)]
-pub fn derive_serializable(input: TokenStream) -> TokenStream {
-    serialize_derive::derive_serialize(input)
+pub fn derive_serialize_macro(input: TokenStream) -> TokenStream {
+    derive_serialize(input)
 }

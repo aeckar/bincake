@@ -11,7 +11,7 @@ categories = ["encoding"]
 
 [dependencies]
 bincake-core = { version = "1.0.0", path = "../bincake-core" }
-bincake-derive = { version = "1.0.0", path = "../bincake-derive", optional = true }
+bincake-derive = { version = "1.0.1", path = "../bincake-derive", optional = true }
 
 [features]
 default = ["derive"]
