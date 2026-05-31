@@ -26,7 +26,7 @@ extracted as a standalone library after proving stable under real usage.
 ## Example
 
 ```rust
-use bincake::{Serialize, Tape};
+use bincake::*;
 
 #[derive(Serialize)]
 struct Instruction {
@@ -34,14 +34,14 @@ struct Instruction {
     operand: u32,
 }
 
-// serialize
+// Serialize
 let instr = Instruction { opcode: 0x01, operand: 42 };
-let mut bytes = vec![];
-instr.write_to(&mut bytes)?;
+let mut dest = vec![];
+dest.write(instr);
 
-// deserialize
-let mut tape = Tape::new(&bytes);
-let instr = Instruction::read_from(&mut tape)?;
+// Deserialize
+let mut src = bytes.to_tape();
+let instr = src.read::<Instruction>();
 ```
 
 ## When to use this
