@@ -5,11 +5,7 @@
 use pastey::paste;
 use taped::Tape;
 
-use crate::{
-    Serialize,
-    error::{DecodeError, EncodeError},
-    read_write::{Read, Write},
-};
+use crate::{DecodeError, EncodeError, Read, Serialize, Write};
 
 /// Implements Serialize for a tuple type.
 ///

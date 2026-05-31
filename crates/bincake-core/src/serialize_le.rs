@@ -1,17 +1,13 @@
 //! Implements `Serialize` for numeric types.
 //!
-//! This module also provides the `write_le_num` macro for writing numbers in little-endian format to byte vectors.
+//! This module also provides the `encode_le` macro for writing numbers in little-endian format to byte vectors.
 
 use taped::Tape;
 
-use crate::{
-    Serialize,
-    error::{DecodeError, EncodeError},
-};
+use crate::{DecodeError, EncodeError, Serialize};
 
 /// Writes a numeric value to the buffer in little-endian format.
-#[macro_export]
-macro_rules! write_le_num {
+macro_rules! encode_le {
     ($T:ty; $dest:expr, $num:expr) => {
         $dest.extend_from_slice(&($num as $T).to_le_bytes())
     };
@@ -22,7 +18,7 @@ macro_rules! impl_serialize_num {
     ($($T:ty),* $(,)?) => { $(
         impl Serialize for $T {
             fn encode(&self, dest: &mut Vec<u8>) -> Result<(), EncodeError> {
-                write_le_num!($T; dest, *self);
+                encode_le!($T; dest, *self);
                 Ok(())
             }
 

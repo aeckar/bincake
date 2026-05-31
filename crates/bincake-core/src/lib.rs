@@ -1,7 +1,7 @@
 mod error;
 mod read_write;
 mod serialize;
-mod serialize_num;
+mod serialize_le;
 mod serialize_tuple;
 mod sized_vec;
 
@@ -23,7 +23,7 @@ mod tests {
         read_write::{Read, Write},
         serialize::Serialize,
         sized_vec::{Vec8, Vec16, Vec32},
-        vec8, vec16, vec32, write_all,
+        stream, vec8, vec16, vec32,
     };
 
     // Helper function to round-trip test
@@ -315,11 +315,12 @@ mod tests {
         let mut buffer = vec![];
 
         // Write multiple values
-        write_all!(buffer;
-            &42u32,
-            &"hello".to_string(),
-            &true,
-            &vec8![1u8, 2, 3],
+        stream!(
+            42u32,
+            "hello".to_string(),
+            true,
+            vec8![1u8, 2, 3],
+            => buffer
         )
         .unwrap();
 

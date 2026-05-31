@@ -3,10 +3,7 @@
 
 use taped::Tape;
 
-use crate::{
-    error::{DecodeError, EncodeError},
-    serialize::Serialize,
-};
+use crate::{DecodeError, EncodeError, Serialize};
 
 pub trait Read {
     fn read<T: Serialize>(&mut self) -> Result<T, DecodeError>;

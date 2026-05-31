@@ -8,12 +8,7 @@
 use pastey::paste;
 use taped::Tape;
 
-use crate::{
-    Serialize,
-    error::{DecodeError, EncodeError},
-    read_write::{Read, Write},
-    write_le_num,
-};
+use crate::{DecodeError, EncodeError, Read, Serialize, Write};
 
 /// Initializes a vector with an 8-bit size.
 #[macro_export]
@@ -88,7 +83,7 @@ macro_rules! impl_vec_n {
                 if len > 0xFFFFFFFFusize {
                     return Err(EncodeError::LengthExceedsPrefix { prefix_size: $width, len })
                 }
-                write_le_num!([<u $width>]; dest, len);
+                len.encode(dest)?;
                 for d in self.iter() {
                     dest.write(d)?;
                 }

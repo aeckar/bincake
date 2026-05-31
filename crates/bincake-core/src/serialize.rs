@@ -12,21 +12,19 @@
 
 use taped::Tape;
 
-use crate::{
-    error::{DecodeError, EncodeError},
-    read_write::Read,
-    sized_vec::Vec32,
-};
+use crate::{DecodeError, EncodeError, Read, Vec32, Write};
 
-/// Writes all provided data to the destination.
+/// Writes all provided data to the destination, taking each argument as a reference.
+///
+/// This macro is useful for streaming known sequences of values to a destination.
 #[macro_export]
-macro_rules! write_all {
-    ($dest:expr; $($data:expr),* $(,)?) => {
+macro_rules! stream {
+    ($($data:expr),* $(,)? => $dest:expr) => {
         {
             let mut result;
             'cases: {
                 $(
-                    result = $dest.write($data);
+                    result = $dest.write(&$data);
                     if result.is_err() {
                         break 'cases;
                     }
@@ -71,7 +69,7 @@ impl Serialize for String {
                 len,
             });
         }
-        crate::write_le_num!(u32; dest, len);
+        dest.write(&len)?;
         dest.extend_from_slice(self.as_bytes());
         Ok(())
     }
