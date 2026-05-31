@@ -10,8 +10,8 @@ keywords = []
 categories = []
 
 [dependencies]
-bincake-core = { path = "../bincake-core" }
-bincake-derive = { path = "../bincake-derive", optional = true }
+bincake-core = { version = "0.1.0", path = "../bincake-core" }
+bincake-derive = { version = "0.1.0", path = "../bincake-derive", optional = true }
 
 [features]
 default = ["derive"]
