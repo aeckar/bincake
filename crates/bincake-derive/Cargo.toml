@@ -1,0 +1,16 @@
+[package]
+name = "bincake-derive"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+bincake-core = { path = "../bincake-core" }
+syn = "2.0.111"
+quote = "1.0.42"
+proc-macro2 = "1.0.103"
+
+[dev-dependencies]
+taped = "1.2.1"

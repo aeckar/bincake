@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/bincake", "crates/bincake-core", "crates/bincake-derive"]
+resolver = "2"

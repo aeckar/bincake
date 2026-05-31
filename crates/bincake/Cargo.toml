@@ -1,0 +1,12 @@
+[package]
+name = "bincake"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bincake-core = { path = "../bincake-core" }
+bincake-derive = { path = "../bincake-derive", optional = true }
+
+[features]
+default = ["derive"]
+derive = ["dep:bincake-derive"]
