@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use bincake::*;
-    use taped::Tape;
+    use bincake_core::*;
+    use bincake_derive::Serialize;
+use taped::Tape;
 
     #[derive(Serialize, Debug, PartialEq, Eq)]
     struct Point {
