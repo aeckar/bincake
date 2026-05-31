@@ -11,8 +11,8 @@ use crate::derive_serialize::derive_serialize;
 /// # Example
 ///
 /// ```rust
-/// use bincake::Serialize;
-/// 
+/// # use bincake_core::Serialize;
+/// #
 /// #[derive(Serialize)]
 /// struct MyStruct {
 ///     name: String,
