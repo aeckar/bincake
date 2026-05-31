@@ -1,7 +1,8 @@
 # bincake
 
-um
+Serde-free deterministic binary serialization.
 
+[![Rust](https://github.com/aeckar/bincake/actions/workflows/rust.yml/badge.svg)](https://github.com/aeckar/bincake/actions/workflows/rust.yml)
 [![Crates.io](https://img.shields.io/crates/v/bincake.svg)](https://crates.io/crates/bincake)
 
 ## Documentation
@@ -10,38 +11,49 @@ um
 
 ## Overview
 
-`Tape` wraps a byte slice with a position cursor, providing methods for
-scanning, backtracking, and consuming bytes without allocating.
+`bincake` serializes and deserializes Rust types to and from compact little-endian binary,
+with no dependency on `serde`.
 
-- Optimized character and string search via [`memchr`](https://github.com/BurntSushi/memchr)
-- Simple lookahead and lookbehind of whitespace characters
-- Indentation counting and paragraph/line awareness
+- Deterministic output — identical data always produces identical bytes
+- Derive macros for automatic implementation on custom types
+    - Controlled by `derive` feature flag
+- Built on [`taped`](https://crates.io/crates/taped) for zero-allocation byte reading
+- Numeric types, strings, vecs, and tuples supported out of the box
 
-Originally developed as the byte reader for [`bincake`](https://github.com/aeckar/bincake),
-extracted as a standalone primitive after the same pattern appeared
-across multiple projects.
+Originally developed as the bytecode serialization format for [`rvm`](https://github.com/aeckar/rvm),
+extracted as a standalone library after proving stable under real usage.
 
 ## Example
 
 ```rust
-use taped::Tape;
+use bincake::{Serialize, Tape};
 
-let data = b"hello world";
-let mut tape = Tape::new(data);
+#[derive(Serialize)]
+struct Instruction {
+    opcode: u8,
+    operand: u32,
+}
 
-tape.seek(|&b| b == b' '); // advance to space
-let word = tape.consume(|&b| b != b' '); // consume "hello"
-assert_eq!(word, b"hello");
+// serialize
+let instr = Instruction { opcode: 0x01, operand: 42 };
+let mut bytes = vec![];
+instr.write_to(&mut bytes)?;
+
+// deserialize
+let mut tape = Tape::new(&bytes);
+let instr = Instruction::read_from(&mut tape)?;
 ```
 
 ## When to use this
 
-- Writing a parser for a binary or text format
-- Scanning byte sequences without regex or [`nom`](https://github.com/rust-bakery/nom)
-- Anywhere you need backtracking via cheap position snapshots (`tape.clone()`)
+- Serializing bytecode, binary protocols, or other compact binary formats
+- Anywhere deterministic output is required (content hashing, signing)
+- Projects where `serde` compile times are a concern
+- `no_std` environments
 
 ## When not to use this
 
-- Full parser combinator framework → use [`nom`](https://github.com/rust-bakery/nom) or [`winnow`](https://github.com/winnow-rs/winnow)
-- Lexer generation → use [`logos`](https://github.com/maciejhirsz/logos)
-- Async byte streams → use [`tokio::io::AsyncBufRead`](https://docs.rs/tokio/latest/tokio/io/trait.AsyncBufRead.html)
+- Human-readable formats → use [`serde`](https://serde.rs) with `serde_json` or `toml`
+- Schema evolution and forward compatibility → use [`prost`](https://github.com/tokio-rs/prost) (protobuf)
+- Maximum encode/decode performance → use [`rkyv`](https://github.com/rkyv/rkyv)
+- Interoperability with other languages or systems → use [`bincode`](https://github.com/bincode-org/bincode)

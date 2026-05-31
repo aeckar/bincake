@@ -1,32 +1,32 @@
 mod error;
-mod num;
-mod serializable;
-mod traits;
-mod tuple_n;
-mod vec_n;
+mod read_write;
+mod serialize;
+mod serialize_num;
+mod serialize_tuple;
+mod sized_vec;
 
 /// The type used to represent the length of a string when serialized.
-pub type StringLen = u32;
+pub type StringSize = u32;
 
-/// The size of the type used to represent the length of a string when serialized.
-pub const STRING_LEN_SIZE: usize = std::mem::size_of::<StringLen>();
+pub use taped::Tape;
 
-pub use self::{error::*, serializable::*, traits::*, vec_n::*};
-
-pub use taped::Tape;    // re-export dependency as used in public API
+// re-export dependency as used in public API
+pub use self::{error::*, read_write::*, serialize::*, sized_vec::*};
 
 #[cfg(test)]
 mod tests {
     use taped::Tape;
 
-    use crate::error::{DeserializeError, SerializeError};
-    use crate::serializable::Serializable;
-    use crate::traits::{Read, Write};
-    use crate::vec_n::{Vec8, Vec16, Vec32};
-    use crate::write_all;
+    use crate::{
+        error::{DecodeError, EncodeError},
+        read_write::{Read, Write},
+        serialize::Serialize,
+        sized_vec::{Vec8, Vec16, Vec32},
+        vec8, vec16, vec32, write_all,
+    };
 
     // Helper function to round-trip test
-    fn round_trip<T: Serializable + PartialEq + std::fmt::Debug>(value: T) {
+    fn round_trip<T: Serialize + PartialEq + std::fmt::Debug>(value: T) {
         let mut buffer = vec![];
         buffer.write(&value).expect("Failed to write");
 
@@ -137,52 +137,44 @@ mod tests {
 
     #[test]
     fn test_vec8() {
-        let empty: Vec8<u32> = Vec8::new(vec![]);
+        let empty: Vec8<u32> = vec8![];
         round_trip(empty);
 
-        let small = Vec8::new(vec![1u32, 2, 3, 4, 5]);
+        let small = vec8![1u32, 2, 3, 4, 5];
         round_trip(small);
 
         // Max size for Vec8
-        let max_vec8 = Vec8::new(vec![0u8; 255]);
+        let max_vec8 = vec8![0u8; 255];
         round_trip(max_vec8);
     }
 
     #[test]
     fn test_vec16() {
-        let empty: Vec16<u32> = Vec16::new(vec![]);
+        let empty: Vec16<u32> = vec16![];
         round_trip(empty);
 
-        let medium = Vec16::new(vec![100u32; 300]);
+        let medium = vec16![100u32; 300];
         round_trip(medium);
     }
 
     #[test]
     fn test_vec32() {
-        let empty: Vec32<u32> = Vec32::new(vec![]);
+        let empty: Vec32<u32> = vec32![];
         round_trip(empty);
 
-        let large = Vec32::new(vec![42u32; 10000]);
+        let large = vec32![42u32; 10000];
         round_trip(large);
     }
 
     #[test]
     fn test_vec_of_strings() {
-        let strings = Vec32::new(vec![
-            "hello".to_string(),
-            "world".to_string(),
-            "🦀".to_string(),
-        ]);
+        let strings = vec32!["hello".to_string(), "world".to_string(), "🦀".to_string(),];
         round_trip(strings);
     }
 
     #[test]
     fn test_nested_vecs() {
-        let nested = Vec32::new(vec![
-            Vec8::new(vec![1u8, 2, 3]),
-            Vec8::new(vec![4, 5]),
-            Vec8::new(vec![]),
-        ]);
+        let nested = vec32![vec8![1u8, 2, 3], vec8![4, 5], vec8![]];
         round_trip(nested);
     }
 
@@ -210,7 +202,7 @@ mod tests {
     #[test]
     fn test_vec_length_prefix() {
         let mut buffer = vec![];
-        buffer.write(&Vec32::new(vec![1u8, 2, 3])).unwrap();
+        buffer.write(&vec32![1u8, 2, 3]).unwrap();
 
         // First 4 bytes should be length (3 in little-endian)
         assert_eq!(buffer[0..4], [3, 0, 0, 0]);
@@ -224,7 +216,7 @@ mod tests {
         let mut src = Tape::new(&buffer);
 
         let result = src.read::<u32>();
-        assert!(matches!(result, Err(DeserializeError::Exhausted { .. })));
+        assert!(matches!(result, Err(DecodeError::Exhausted { .. })));
     }
 
     #[test]
@@ -237,7 +229,7 @@ mod tests {
         let mut src = Tape::new(truncated);
 
         let result = src.read::<u32>();
-        assert!(matches!(result, Err(DeserializeError::Exhausted { .. })));
+        assert!(matches!(result, Err(DecodeError::Exhausted { .. })));
     }
 
     #[test]
@@ -250,7 +242,7 @@ mod tests {
         let mut src = Tape::new(truncated);
 
         let result = src.read::<String>();
-        assert!(matches!(result, Err(DeserializeError::Exhausted { .. })));
+        assert!(matches!(result, Err(DecodeError::Exhausted { .. })));
     }
 
     #[test]
@@ -265,20 +257,20 @@ mod tests {
         let mut src = Tape::new(&buffer);
         let result = src.read::<String>();
 
-        assert!(matches!(result, Err(DeserializeError::Other { .. })));
+        assert!(matches!(result, Err(DecodeError::Other { .. })));
     }
 
     #[test]
     fn test_truncated_vec() {
         let mut buffer = vec![];
-        buffer.write(&Vec32::new(vec![1u32, 2, 3])).unwrap();
+        buffer.write(&vec32![1u32, 2, 3]).unwrap();
 
         // Truncate so there's not enough data for all elements
         let truncated = &buffer[0..8]; // Length prefix + only 1 element
         let mut src = Tape::new(truncated);
 
         let result = src.read::<Vec32<u32>>();
-        assert!(matches!(result, Err(DeserializeError::Exhausted { .. })));
+        assert!(matches!(result, Err(DecodeError::Exhausted { .. })));
     }
 
     #[test]
@@ -291,7 +283,7 @@ mod tests {
         let result = buffer.write(&huge_string);
         assert!(matches!(
             result,
-            Err(SerializeError::LengthExceedsPrefix { .. })
+            Err(EncodeError::LengthExceedsPrefix { .. })
         ));
     }
 
@@ -326,7 +318,7 @@ mod tests {
             &42u32,
             &"hello".to_string(),
             &true,
-            &Vec8::new(vec![1u8, 2, 3]),
+            &vec8![1u8, 2, 3],
         )
         .unwrap();
 
@@ -350,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_complex_structure() {
-        // Simulate a complex bytecode structure
+        // Simulate a complex structure
         let mut buffer = vec![];
 
         // Header
@@ -360,14 +352,11 @@ mod tests {
         buffer.write(&(1u16, 0u16)).unwrap();
 
         // Function table
-        let functions = Vec32::new(vec![
-            ("main".to_string(), 0u32),
-            ("helper".to_string(), 100u32),
-        ]);
+        let functions = vec32![("main".to_string(), 0u32), ("helper".to_string(), 100u32),];
         buffer.write(&functions).unwrap();
 
         // Constants
-        let constants = Vec16::new(vec!["Hello".to_string(), "World".to_string()]);
+        let constants = vec16!["Hello".to_string(), "World".to_string()];
         buffer.write(&constants).unwrap();
 
         // Read it all back

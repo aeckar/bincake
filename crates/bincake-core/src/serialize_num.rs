@@ -1,12 +1,15 @@
-//! Implements `Serializable` for numeric types.
+//! Implements `Serialize` for numeric types.
 //!
 //! This module also provides the `write_le_num` macro for writing numbers in little-endian format to byte vectors.
 
-use crate::{error::DeserializeError, error::SerializeError, serializable::Serializable};
 use taped::Tape;
 
-/// Writes a numeric value to the `Vec<u8>` in little-endian format,
-/// as required by the bytecode specification.
+use crate::{
+    Serialize,
+    error::{DecodeError, EncodeError},
+};
+
+/// Writes a numeric value to the buffer in little-endian format.
 #[macro_export]
 macro_rules! write_le_num {
     ($T:ty; $dest:expr, $num:expr) => {
@@ -14,26 +17,26 @@ macro_rules! write_le_num {
     };
 }
 
-/// Implements `Serializable` for numeric types.
-macro_rules! impl_num_serializers {
+/// Implements `Serialize` for numeric types.
+macro_rules! impl_serialize_num {
     ($($T:ty),* $(,)?) => { $(
-        impl Serializable for $T {
-            fn write_to(&self, dest: &mut Vec<u8>) -> Result<(), SerializeError> {
+        impl Serialize for $T {
+            fn encode(&self, dest: &mut Vec<u8>) -> Result<(), EncodeError> {
                 write_le_num!($T; dest, *self);
                 Ok(())
             }
 
-            fn read_from(src: &mut Tape<'_, u8>) -> Result<Self, DeserializeError> {
+            fn decode(src: &mut Tape<'_, u8>) -> Result<Self, DecodeError> {
                 let size = size_of::<Self>();
                 let pos = src.pos;
                 let data = &src;
                 if pos + size > data.len() {
-                    return Err(DeserializeError::Exhausted { pos });
+                    return Err(DecodeError::Exhausted { pos });
                 }
                 let slice = &data[pos..pos + size];
                 src.pos += size;
                 let bytes = slice.try_into()
-                    .map_err(|_| DeserializeError::Other {
+                    .map_err(|_| DecodeError::Other {
                         pos,
                         cause: format!("Invalid length at index {}", pos)
                     })?;
@@ -43,6 +46,6 @@ macro_rules! impl_num_serializers {
     )*};
 }
 
-impl_num_serializers!(
+impl_serialize_num!(
     u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64,
 );

@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput, Fields, Index, parse_macro_input};
 
-pub fn derive_serializable(input: TokenStream) -> TokenStream {
+pub fn derive_serialize(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
     let generics = &input.generics;
@@ -19,12 +19,12 @@ pub fn derive_serializable(input: TokenStream) -> TokenStream {
     };
 
     let expanded = quote! {
-        impl #impl_generics Serializable for #name #ty_generics #where_clause {
-            fn write_to(&self, dest: &mut Vec<u8>) -> Result<(), SerializeError> {
+        impl #impl_generics Serialize for #name #ty_generics #where_clause {
+            fn encode(&self, dest: &mut Vec<u8>) -> Result<(), EncodeError> {
                 #write_impl
             }
 
-            fn read_from(src: &mut taped::Tape<'_, u8>) -> Result<Self, DeserializeError> {
+            fn decode(src: &mut taped::Tape<'_, u8>) -> Result<Self, DecodeError> {
                 #read_impl
             }
         }
@@ -33,7 +33,7 @@ pub fn derive_serializable(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-/// Generates the `write_to` and `read_from` implementations for a `struct`.
+/// Generates the `encode` and `decode` implementations for a `struct`.
 pub(crate) fn generate_struct_impl(
     fields: &Fields,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
@@ -42,12 +42,12 @@ pub(crate) fn generate_struct_impl(
             let field_names: Vec<_> = fields_named.named.iter().map(|f| &f.ident).collect();
             let write_fields = field_names.iter().map(|name| {
                 quote! {
-                    self.#name.write_to(dest)?;
+                    self.#name.encode(dest)?;
                 }
             });
             let read_fields = field_names.iter().map(|name| {
                 quote! {
-                    #name: Serializable::read_from(src)?
+                    #name: Serialize::decode(src)?
                 }
             });
             let write_impl = quote! {
@@ -66,12 +66,12 @@ pub(crate) fn generate_struct_impl(
             let field_indices: Vec<_> = (0..field_count).map(Index::from).collect();
             let write_fields = field_indices.iter().map(|i| {
                 quote! {
-                    self.#i.write_to(dest)?;
+                    self.#i.encode(dest)?;
                 }
             });
             let read_fields = (0..field_count).map(|_| {
                 quote! {
-                    Serializable::read_from(src)?
+                    Serialize::decode(src)?
                 }
             });
             let write_impl = quote! {
@@ -97,7 +97,7 @@ pub(crate) fn generate_struct_impl(
     }
 }
 
-/// Generates the `write_to` and `read_from` implementations for an `enum`.
+/// Generates the `encode` and `decode` implementations for an `enum`.
 fn generate_enum_impl(
     name: &syn::Ident,
     data_enum: &syn::DataEnum,
@@ -124,7 +124,7 @@ fn generate_enum_impl(
                 Fields::Named(fields) => {
                     let field_names: Vec<_> = fields.named.iter().map(|f| &f.ident).collect();
                     let write_fields = field_names.iter().map(|fname| {
-                        quote! { #fname.write_to(dest)?; }
+                        quote! { #fname.encode(dest)?; }
                     });
                     quote! {
                         Self::#variant_name { #(#field_names),* } => {
@@ -141,7 +141,7 @@ fn generate_enum_impl(
                         })
                         .collect();
                     let write_fields = field_bindings.iter().map(|f| {
-                        quote! { #f.write_to(dest)?; }
+                        quote! { #f.encode(dest)?; }
                     });
                     quote! {
                         Self::#variant_name(#(#field_bindings),*) => {
@@ -173,7 +173,7 @@ fn generate_enum_impl(
                     let field_names: Vec<_> = fields.named.iter().map(|f| &f.ident).collect();
                     let read_fields = field_names.iter().map(|fname| {
                         quote! {
-                            #fname: Serializable::read_from(src)?
+                            #fname: Serialize::decode(src)?
                         }
                     });
                     quote! {
@@ -185,7 +185,7 @@ fn generate_enum_impl(
                 Fields::Unnamed(fields) => {
                     let field_count = fields.unnamed.len();
                     let read_fields = (0..field_count).map(|_| {
-                        quote! { Serializable::read_from(src)? }
+                        quote! { Serialize::decode(src)? }
                     });
                     quote! {
                         #discriminant => Ok(Self::#variant_name(
@@ -209,10 +209,10 @@ fn generate_enum_impl(
     };
 
     let read_impl = quote! {
-        let discriminant = u8::read_from(src)?;
+        let discriminant = u8::decode(src)?;
         match discriminant {
             #(#read_variants,)*
-            _ => Err(DeserializeError::Other {
+            _ => Err(DecodeError::Other {
                 pos: src.pos - 1,
                 cause: format!("Invalid discriminant {} for enum {}", discriminant, stringify!(#name)),
             })

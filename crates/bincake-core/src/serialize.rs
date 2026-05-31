@@ -13,9 +13,9 @@
 use taped::Tape;
 
 use crate::{
-    error::{DeserializeError, SerializeError},
-    traits::Read,
-    vec_n::Vec32,
+    error::{DecodeError, EncodeError},
+    read_write::Read,
+    sized_vec::Vec32,
 };
 
 /// Writes all provided data to the destination.
@@ -37,36 +37,36 @@ macro_rules! write_all {
     };
 }
 
-/// A value that can be serialized to and deserialized from bytecode.
-pub trait Serializable: Sized {
-    /// Encodes this value to bytecode by appending it to the buffer.
-    fn write_to(&self, dest: &mut Vec<u8>) -> Result<(), SerializeError>;
+/// A value that can be serialized to and deserialized from a byte buffer.
+pub trait Serialize: Sized {
+    /// Encodes this value by appending it to the buffer.
+    fn encode(&self, dest: &mut Vec<u8>) -> Result<(), EncodeError>;
 
-    /// Decodes the value from bytecode.
+    /// Decodes the value by consuming the next one in the buffer.
     ///
-    /// Returns `crate::bytecode::Error` if the encoded data is malformed.
-    fn read_from(src: &mut Tape<'_, u8>) -> Result<Self, DeserializeError>;
+    /// Returns `bincake::DeserializeError` if the encoded data is malformed.
+    fn decode(src: &mut Tape<'_, u8>) -> Result<Self, DecodeError>;
 }
 
-impl Serializable for bool {
-    fn write_to(&self, dest: &mut Vec<u8>) -> Result<(), SerializeError> {
+impl Serialize for bool {
+    fn encode(&self, dest: &mut Vec<u8>) -> Result<(), EncodeError> {
         dest.push(if *self { 1u8 } else { 0u8 });
         Ok(())
     }
 
-    fn read_from(src: &mut Tape<'_, u8>) -> Result<Self, DeserializeError> {
+    fn decode(src: &mut Tape<'_, u8>) -> Result<Self, DecodeError> {
         src.next()
-            .ok_or(DeserializeError::Exhausted { pos: src.pos })
+            .ok_or(DecodeError::Exhausted { pos: src.pos })
             .map(|b| b == 1)
     }
 }
 
-impl Serializable for String {
-    fn write_to(&self, dest: &mut Vec<u8>) -> Result<(), SerializeError> {
+impl Serialize for String {
+    fn encode(&self, dest: &mut Vec<u8>) -> Result<(), EncodeError> {
         let len = self.len();
         #[cfg(target_pointer_width = "64")]
         if len > u32::MAX as usize {
-            return Err(SerializeError::LengthExceedsPrefix {
+            return Err(EncodeError::LengthExceedsPrefix {
                 prefix_size: 32,
                 len,
             });
@@ -76,10 +76,10 @@ impl Serializable for String {
         Ok(())
     }
 
-    fn read_from(src: &mut Tape<'_, u8>) -> Result<Self, DeserializeError> {
+    fn decode(src: &mut Tape<'_, u8>) -> Result<Self, DecodeError> {
         let start = src.pos;
         let data = src.read::<Vec32<u8>>()?.into_inner();
-        String::from_utf8(data).map_err(|e| DeserializeError::Other {
+        String::from_utf8(data).map_err(|e| DecodeError::Other {
             pos: start,
             cause: format!("Invalid UTF-8 ({e})"),
         })

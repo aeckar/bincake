@@ -1,17 +1,17 @@
 #[cfg(test)]
 mod tests {
     use bincake_core::*;
-    use bincake_derive::Serializable;
+    use bincake_derive::Serialize;
 use taped::Tape;
 
-    #[derive(Serializable, Debug, PartialEq, Eq)]
+    #[derive(Serialize, Debug, PartialEq, Eq)]
     struct Point {
         x: i32,
         y: i32,
         z: i32,
     }
 
-    #[derive(Serializable, Debug, PartialEq, Eq)]
+    #[derive(Serialize, Debug, PartialEq, Eq)]
     struct Player {
         name: String,
         position: Point,
@@ -19,7 +19,7 @@ use taped::Tape;
         active: bool,
     }
 
-    #[derive(Serializable, Debug, PartialEq, Eq)]
+    #[derive(Serialize, Debug, PartialEq, Eq)]
     enum Instruction {
         Nop,
         Push(u32),
