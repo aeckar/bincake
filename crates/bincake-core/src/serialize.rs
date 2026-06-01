@@ -12,7 +12,7 @@
 
 use taped::Tape;
 
-use crate::{DecodeError, EncodeError, Read, Vec32, Write};
+use crate::{DecodeError, EncodeError, Read, StringSize, Vec32, Write};
 
 /// Writes all arguments to a byte buffer, taking each as a reference.
 #[macro_export]
@@ -60,21 +60,18 @@ impl Serialize for bool {
 impl Serialize for String {
     fn encode(&self, dest: &mut Vec<u8>) -> Result<(), EncodeError> {
         let len = self.len();
-        #[cfg(target_pointer_width = "64")]
-        if len > u32::MAX as usize {
-            return Err(EncodeError::LengthExceedsPrefix {
-                prefix_size: 32,
-                len,
-            });
-        }
-        dest.write(&len)?;
+        let len32 = StringSize::try_from(len).map_err(|_| EncodeError::LengthExceedsPrefix {
+            prefix_size: 32,
+            len,
+        })?;
+        dest.write(&len32)?;
         dest.extend_from_slice(self.as_bytes());
         Ok(())
     }
 
     fn decode(src: &mut Tape<'_, u8>) -> Result<Self, DecodeError> {
         let start = src.pos;
-        let data = src.read::<Vec32<u8>>()?.into_inner();
+        let data = src.read::<Vec32<u8>>()?.into();
         String::from_utf8(data).map_err(|e| DecodeError::Other {
             pos: start,
             cause: format!("Invalid UTF-8 ({e})"),

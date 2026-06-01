@@ -18,7 +18,7 @@ macro_rules! vec8 {
     ($x:expr; $n:expr) => { $crate::Vec8::from(vec![$x; $n]) };
 }
 
-/// Initializes a vector with an 16-bit size.
+/// Initializes a vector with a 16-bit size.
 #[macro_export]
 macro_rules! vec16 {
     () => { $crate::Vec16::from(vec![]) };
@@ -26,7 +26,7 @@ macro_rules! vec16 {
     ($x:expr; $n:expr) => { $crate::Vec16::from(vec![$x; $n]) };
 }
 
-/// Initializes a vector with an 32-bit size.
+/// Initializes a vector with a 32-bit size.
 #[macro_export]
 macro_rules! vec32 {
     () => { $crate::Vec32::from(vec![]) };
@@ -34,7 +34,7 @@ macro_rules! vec32 {
     ($x:expr; $n:expr) => { $crate::Vec32::from(vec![$x; $n]) };
 }
 
-/// Initializes a vector with an 64-bit size.
+/// Initializes a vector with a 64-bit size.
 #[macro_export]
 macro_rules! vec64 {
     () => { $crate::Vec64::from(vec![]) };
@@ -42,7 +42,7 @@ macro_rules! vec64 {
     ($x:expr; $n:expr) => { $crate::Vec64::from(vec![$x; $n]) };
 }
 
-/// Initializes a vector with an 128-bit size.
+/// Initializes a vector with a 128-bit size.
 #[macro_export]
 macro_rules! vec128 {
     () => { $crate::Vec128::from(vec![]) };
@@ -56,14 +56,6 @@ macro_rules! impl_vec_n {
         #[derive(Debug, Clone, PartialEq, Eq)]
         pub struct [<Vec $width>]<T>(Vec<T>);
 
-        impl<T> [<Vec $width>]<T> {
-            /// Consumes self and returns the inner Vec.
-            pub fn into_inner(self) -> Vec<T> {
-                self.0
-            }
-        }
-
-        // From/Into conversions
         impl<T> From<Vec<T>> for [<Vec $width>]<T> {
             fn from(v: Vec<T>) -> Self {
                 Self(v)
@@ -79,11 +71,11 @@ macro_rules! impl_vec_n {
         impl<T: Serialize> Serialize for [<Vec $width>]<T> {
             fn encode(&self, dest: &mut Vec<u8>) -> Result<(), EncodeError> {
                 let len = self.len();
-                #[cfg(target_pointer_width = "64")]
-                if len > 0xFFFFFFFFusize {
-                    return Err(EncodeError::LengthExceedsPrefix { prefix_size: $width, len })
-                }
-                len.encode(dest)?;
+                let prefix = [<u $width>]::try_from(len).map_err(|_| EncodeError::LengthExceedsPrefix {
+                    prefix_size: $width,
+                    len,
+                })?;
+                prefix.encode(dest)?;
                 for d in self.iter() {
                     dest.write(d)?;
                 }

@@ -337,7 +337,7 @@ mod tests {
         assert!(boolean);
 
         let vec = src.read::<Vec8<u8>>().unwrap();
-        assert_eq!(vec.into_inner(), vec![1, 2, 3]);
+        assert_eq!(Vec::from(vec), vec![1, 2, 3]);
 
         assert_eq!(src.rest().len(), 0);
     }
@@ -354,7 +354,7 @@ mod tests {
         buffer.write(&(1u16, 0u16)).unwrap();
 
         // Function table
-        let functions = vec32![("main".to_string(), 0u32), ("helper".to_string(), 100u32),];
+        let functions = vec32![("main".to_string(), 0u32), ("helper".to_string(), 100u32)];
         buffer.write(&functions).unwrap();
 
         // Constants
